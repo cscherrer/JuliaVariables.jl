@@ -444,7 +444,7 @@ function solve!(id_function, ast; toplevel=true)
         end
 
     function local_var_to_var(var::LocalVar)::Var
-        unique_id = id_function(var.is_shared)
+        unique_id = id_function(var.is_shared, var)
         Var(var.sym, unique_id, var.is_mutable[], var.is_shared[], false)
     end
 
@@ -508,7 +508,7 @@ function solve!(id_function, ast; toplevel=true)
     transform(ast)
 end # module struct
 
-solve!(ast; toplevel=true) = solve!(identity, ast; toplevel=toplevel)
+solve!(ast; toplevel=true) = solve!((a, _) -> a, ast; toplevel=toplevel)
 
 solve_from_local!(id_function, @nospecialize(ex)) = solve!(id_function, ex; toplevel=false)
 
