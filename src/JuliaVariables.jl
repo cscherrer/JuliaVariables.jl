@@ -444,7 +444,7 @@ function solve!(id_function, ast; toplevel=true)
         end
 
     function local_var_to_var(var::LocalVar)::Var
-        unique_id = id_function(var.is_shared, var)
+        unique_id = id_function(var.is_shared, var.sym)
         Var(var.sym, unique_id, var.is_mutable[], var.is_shared[], false)
     end
 
