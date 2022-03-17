@@ -57,9 +57,9 @@ end
 
 SymRef(sym::Symbol, ana::Union{Nothing, Analyzer}) = SymRef(sym, ana, false)
 
-struct Var
+struct Var{ID}
     name::Symbol
-    unique_id:: Union{Ref{Bool}, Nothing}  # nothing when it's a global variable
+    unique_id:: ID  # nothing when it's a global variable
     is_mutable::Bool
     is_shared::Bool
     is_global::Bool
@@ -130,7 +130,7 @@ satifies following conditions:
 - No macros included in the expression, as we don't know how much a macro
   could change the code.
 """
-function solve!(ast; toplevel=true)
+function solve!(id_function, ast; toplevel=true)
     S = Ref(State(top_analyzer(), C_LEXICAL, Set{Symbol}()))
     ScopeInfo = IdDict{Expr,Any}()
     PHYSICAL = true
@@ -444,7 +444,7 @@ function solve!(ast; toplevel=true)
         end
 
     function local_var_to_var(var::LocalVar)::Var
-        unique_id = var.is_shared
+        unique_id = id_function(var.is_shared, var.sym)
         Var(var.sym, unique_id, var.is_mutable[], var.is_shared[], false)
     end
 
@@ -507,6 +507,10 @@ function solve!(ast; toplevel=true)
 
     transform(ast)
 end # module struct
+
+solve!(ast; toplevel=true) = solve!((a, _) -> a, ast; toplevel=toplevel)
+
+solve_from_local!(id_function, @nospecialize(ex)) = solve!(id_function, ex; toplevel=false)
 
 solve_from_local!(@nospecialize(ex)) = solve!(ex; toplevel=false)
 
